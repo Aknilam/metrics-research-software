@@ -1,5 +1,17 @@
 # Research software #
 
+This software was written while creating research paper `Software metrics in Boa large-scale software mining infrastructure: challenges and solutions`.
+
+Authors:
+Agnieszka Patalas, Michał Malinka, Wojciech Cichowski, Piotr Maćkowiak
+
+under guidance of associate professor Lech Madeyski
+
+Models and Metrics in Software Engineering Project
+
+Wrocław University of Technology
+
+<br>
 To allow easy management of Boa jobs and connecting job outputs with creating defect prediction models, a simple Java program has been written.
 The software uses [Boa Java API](https://github.com/boalang/api) to run jobs.
 
