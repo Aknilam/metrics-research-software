@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<config>
+	<metrics>
+		<metric>CNOAD</metric>
+		<metric>CNOF</metric>
+		<metric>CNOSIM</metric>
+		<metric>CWMC</metric>
+		<metric>DODN</metric>
+		<metric>NOAD</metric>
+		<metric>NOF</metric>
+		<metric>NOND</metric>
+		<metric>NOSIM</metric>
+		<metric>RFC</metric>
+		<metric>WMC</metric>
+	</metrics>
+	<dataset>9</dataset>
+	<output_parameter>FIXES</output_parameter>
+	<result_file_path>result_file.arff</result_file_path>
+</config>

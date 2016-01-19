@@ -1,0 +1,27 @@
+# Number of fields in class
+p: Project = input; 
+
+# output pattern: "metric[projectID][className/classIndex] = metricValue
+m: output collection[string][string] of int;
+
+classIndex : int = 1;
+
+visit(p, visitor{
+	before node : Project -> {		
+		ifall (i: int; !match(`^java$`, lowercase(node.programming_languages[i]))) stop; 
+		if(len(node.code_repositories) > 0) visit(node.code_repositories[0]); 
+		stop; 		
+	}
+	before node : CodeRepository -> {
+		if(len(node.revisions) < 100) stop;
+		snapshot := getsnapshot(node);
+		foreach (i: int; def(snapshot[i]))
+			visit(snapshot[i]);
+		stop;
+	}
+	before node: Declaration ->
+		if (node.kind == TypeKind.CLASS) {
+			m[p.id][format("%05d",classIndex)] << len(node.fields);	
+			classIndex++;
+		}
+});

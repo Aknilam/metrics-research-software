@@ -1,0 +1,61 @@
+# Number of fixes for class
+p: Project = input; 
+
+# output pattern: "metric[projectID][className/classIndex] = metricValue
+m: output collection[string][string] of string;
+
+map_FNames_Fixes: map[string] of string;
+map_FNames_Files: map[string] of ChangedFile;
+set_FNames: set of string;
+
+isFixingRev : bool;
+
+currentFileName : string;
+classIndex : int = 0;
+
+visit(p, visitor{
+	before node : Project -> {		
+		ifall (i: int; !match(`^java$`, lowercase(node.programming_languages[i]))) stop; 
+		if(len(node.code_repositories) > 0) visit(node.code_repositories[0]); 
+		stop; 		
+	}
+	before node : CodeRepository -> {
+		if(len(node.revisions) < 100) stop;
+	}
+	before node : Revision -> {
+		isFixingRev = isfixingrevision(node.log);
+	}
+	before node : ChangedFile -> {
+		if (node.change == ChangeKind.DELETED) {
+			remove(map_FNames_Fixes, node.name);
+			remove(map_FNames_Files, node.name);
+			remove(set_FNames, node.name);
+		} else {
+			map_FNames_Files[node.name] = node;	
+			if (contains(set_FNames, node.name)) {
+				map_FNames_Fixes[node.name] = string(int(map_FNames_Fixes[node.name]) + int(isFixingRev));			
+			} else {
+				add(set_FNames, node.name);
+				map_FNames_Fixes[node.name] = string(int(isFixingRev));
+			}
+		}
+		stop;	
+	}
+	after node : CodeRepository -> {
+		FNames : array of string = keys(map_FNames_Files);
+		foreach(i : int; def(FNames[i])) {
+			currentFileName = FNames[i];
+			astRoot : ASTRoot = getast(map_FNames_Files[currentFileName]);
+			foreach(j : int; def(astRoot.namespaces[j])) {
+				visit(astRoot.namespaces[j]);
+			}
+		}
+	}
+	before node : Declaration -> {		
+		if(node.kind == TypeKind.CLASS) { 
+			classIndex++;
+			m[p.id][format("%05d",classIndex)] << map_FNames_Fixes[currentFileName];
+			
+		}
+	}
+});

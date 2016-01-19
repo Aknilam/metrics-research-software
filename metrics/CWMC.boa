@@ -1,0 +1,58 @@
+# Cumulative number of methods in class (number of methods including methods in nested declarations)
+p: Project = input; 
+
+# output pattern: "metric[projectID][className/classIndex] = metricValue
+m: output collection[string][string] of string;
+
+declId : int = 0;
+classIndex : int = 0;
+
+declarationStack : stack of string;
+map_DeclId_ClassId : map[string] of string;
+map_DeclId_MethodsCount : map[string] of string;
+
+visit(p, visitor{
+	before node : Project -> {		
+		ifall (i: int; !match(`^java$`, lowercase(node.programming_languages[i]))) stop; 
+		if(len(node.code_repositories) > 0) visit(node.code_repositories[0]); 
+		stop; 		
+	}
+	before node : CodeRepository -> {
+		if(len(node.revisions) < 100) stop;
+		snapshot := getsnapshot(node);
+		foreach (i: int; def(snapshot[i]))
+			visit(snapshot[i]);
+		stop;
+	}
+	after node : ChangedFile -> {
+		declarationsId := keys(map_DeclId_ClassId);
+		foreach(i : int; def(declarationsId[i])) {
+			classId := map_DeclId_ClassId[declarationsId[i]];				
+			m[p.id][classId] << map_DeclId_MethodsCount[declarationsId[i]];
+		}
+		clear(map_DeclId_ClassId);
+		clear(map_DeclId_MethodsCount);
+		declId = 0;
+	}
+	before node: Declaration -> {
+		declId++;		
+		push(declarationStack, string(declId));
+		map_DeclId_MethodsCount[string(declId)] = string(len(node.methods));
+		
+		if (node.kind == TypeKind.CLASS) {
+			classIndex++;
+			map_DeclId_ClassId[string(declId)] = format("%05d",classIndex);
+		}		
+	}
+	after node: Declaration -> {
+		popId := pop(declarationStack);
+		if(len(declarationStack) > 0) {
+			peekId := peek(declarationStack);
+			map_DeclId_MethodsCount[peekId] = 
+				string(int(map_DeclId_MethodsCount[peekId]) 
+					+ int(map_DeclId_MethodsCount[popId])
+				);
+		}
+		
+	}
+});

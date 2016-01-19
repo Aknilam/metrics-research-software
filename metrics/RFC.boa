@@ -1,0 +1,68 @@
+# Response For Class
+p: Project = input; 
+
+# output pattern: "metric[projectID][className/classIndex] = metricValue
+m: output collection[string][string] of int;
+
+SEP := ", ";
+
+declId : int = 0;
+classIndex : int = 0;
+
+declarationStack : stack of string;
+map_DeclId_Methods : map[string] of string;
+map_DeclId_ClassId : map[string] of string;
+
+visit(p, visitor {
+	before node: Project -> {
+		ifall (i: int; !match(`^java$`, lowercase(node.programming_languages[i]))) stop; 
+		if(len(node.code_repositories) > 0) visit(node.code_repositories[0]); 
+		stop;
+	}
+	before node: CodeRepository -> {
+		if(len(node.revisions) < 100) stop;
+		snapshot := getsnapshot(node);
+		foreach (i: int; def(snapshot[i]))
+			visit(snapshot[i]);
+		stop;
+	}
+	after node : ChangedFile -> {
+		declarationsId := keys(map_DeclId_ClassId);
+		foreach(i : int; def(declarationsId[i])) {
+			classId := map_DeclId_ClassId[declarationsId[i]];
+			classMethods := splitall(map_DeclId_Methods[declarationsId[i]], SEP);					
+			m[p.id][classId] << len(classMethods);
+		}
+		clear(map_DeclId_ClassId);
+		clear(map_DeclId_Methods);
+		declId = 0;
+	}
+	before node: Declaration -> {
+		declId++;		
+		push(declarationStack, string(declId));
+		
+		methods := "";
+		foreach(i : int; def(node.methods[i]))
+			methods = methods + node.methods[i].name + SEP;
+		map_DeclId_Methods[string(declId)] = methods;
+		
+		if (node.kind == TypeKind.CLASS) {
+			classIndex++;
+			map_DeclId_ClassId[string(declId)] = format("%05d",classIndex);
+		}	
+	}
+	after node: Declaration -> {
+		pop(declarationStack);
+	}
+	before node: Expression -> {
+		if (node.kind == ExpressionKind.METHODCALL) {
+			currentDecl := peek(declarationStack);
+			methodsString := map_DeclId_Methods[currentDecl];
+			methodsInDecl := splitall(methodsString, SEP);
+			
+			ifall(i : int; !match(node.method, methodsInDecl[i])) {
+				map_DeclId_Methods[currentDecl] = methodsString + node.method + SEP;
+			}	
+		}	
+	}
+});
