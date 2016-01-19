@@ -24,7 +24,7 @@ Few simple documents (input files) should be used to configurate query. They are
 * * `<metrics>`: a list of metrics as a list of `<metric>` attributes; each metric should be stored in a `*.boa` file with the same name and placed in `metrics/` dictionary. `*.boa` files must have only one output named `m`
 * * `<dataset>`: the ID of the picked dataset; the IDs of working datasets are defined in `datasets_dictionary.xml` file;
 * * `<output_parameter>`: defines the evaluating value for prediction model; so far, only the fixing revision attribute is used in such manner. It can be imported in the same way as `<metric>`
-* * `<result_file_path>`: prediction output file name, relative to `res/` dictionary
+* * `<result_file_path>`: prediction output file name, relative to main directory
 
 <br>
 Program builds simple prediction model which can be used to predcit number of fixing revision in no-classifed data set.
@@ -32,7 +32,7 @@ Program builds simple prediction model which can be used to predcit number of fi
 
 Result file has following structure:
 
-Columns: List of input metrics, eg. WMC,CNOF,RFC
+Columns: List of input metrics, eg. WMC, CNOF, RFC
 
 Rows: Values of each metic
 
