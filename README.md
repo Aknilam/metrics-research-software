@@ -38,4 +38,6 @@ Rows: Values of each metic
 
 Last column named "fixingRevisions" contains value calculated by predicition model.
 
+## Statistical tests ##
+
 `statistical_tests_with_MATLAB` folder contains statistical tests used for calculating importance of cumulative metrics described in the paper.
